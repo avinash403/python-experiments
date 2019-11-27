@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import scapy.all as scapy
+import prettytable
 
 
 def scan(ip):
@@ -29,13 +30,10 @@ def scan(ip):
 
 
 def print_result(result_list):
-    print("-------------------------------------------------------")
-    print("IP\t\t\t\tMac Address")
-    print("-------------------------------------------------------")
-
+    table = prettytable.PrettyTable(["Ip", "Mac Address"])
     for element in result_list:
-        print(element['ip']+"\t\t\t" + element['mac'])
+        table.add_row([element['ip'], element['mac']])
+    print(table)
 
-    print("-------------------------------------------------------")
 
-print_result(scan("192.168.225.1/24"))
+print_result(scan("192.168.2.1/24"))

@@ -2,13 +2,14 @@
 
 import scapy.all as scapy
 import prettytable
+import optparse
 
 
 def scan(ip):
     # scapy_all.arping(ip)
     arp_request = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="11:11:11:11:11:11")
-    arp_request_broadcast = broadcast/arp_request
+    arp_request_broadcast = broadcast / arp_request
     # (answered_list, unanswered_list) = scapy.srp(arp_request_broadcast, timeout=1)
     answered_list = scapy.srp(arp_request_broadcast, timeout=3, verbose=False)[0]
 
@@ -36,4 +37,13 @@ def print_result(result_list):
     print(table)
 
 
-print_result(scan("192.168.2.1/24"))
+def get_target():
+    parser = optparse.OptionParser()
+    parser.add_option("-t", "--target", dest="target", help="range of IP addresses")
+    options = parser.parse_args()[0]
+    if not options.target:
+        parser.error("Please specify an IP range")
+    return options.target
+
+
+print_result(scan(get_target()))

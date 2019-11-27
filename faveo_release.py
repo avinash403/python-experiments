@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import subprocess
+import sys
 from collections import namedtuple
 import prettytable
 
@@ -29,7 +30,7 @@ freelancer = Product(
     productId=28,
     aplIncludeKeyConfig="280ee05dbd04371e",
     productKey="m32kI0NyKGyx2bFM",
-    status = 'PENDING'
+    status='PENDING'
 )
 
 sme = Product(
@@ -91,7 +92,7 @@ def git(*args):
     """
     default_params = ["git", "-C", faveo_base_path]
     all_params = default_params + list(args)
-    subprocess.call(all_params)
+    subprocess.call(all_params, stdout=open('./faveo_release.log', 'a'), stderr=open('./faveo_release.log', 'a'))
 
 
 def find_and_replace(file_path, needle, replacement):
@@ -235,15 +236,26 @@ def startup_update():
     # update remote branch with changes
     publish_release_branch(startup.branch)
 
+enterprise_update()
+    #
+    # freelancer_update()
+    #
+    # company_update()
+    #
+    # sme_update()
+    #
+    # startup_update()
 
-# enterprise_update()
-#
-# freelancer_update()
-#
-# company_update()
-#
-# sme_update()
-#
-# startup_update()
+
+def progress_bar(value, endvalue, bar_length=20):
+    percent = float(value) / endvalue
+    arrow = '-' * int(round(percent * bar_length) - 1) + '>'
+    spaces = ' ' * (bar_length - len(arrow))
+
+    sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
+    sys.stdout.flush()
+
 
 progress_status()
+
+progress_bar(10, 100)

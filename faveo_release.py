@@ -2,8 +2,9 @@
 
 import subprocess
 from collections import namedtuple
+import prettytable
 
-Product = namedtuple("Product", "branch agentLimit productName aplSalt productId aplIncludeKeyConfig productKey")
+Product = namedtuple("Product", "branch agentLimit productName aplSalt productId aplIncludeKeyConfig productKey status")
 
 faveo_base_path = "/var/www/html/faveo-helpdesk-advance/"
 
@@ -15,9 +16,9 @@ enterprise = Product(
     aplSalt="b047c04cde662b7a",
     productId=8,
     aplIncludeKeyConfig="515548a88b8ab641",
-    productKey="N85CeR7zL1J9zW5n"
+    productKey="N85CeR7zL1J9zW5n",
+    status='PENDING'
 )
-
 
 # freelancer configurations
 freelancer = Product(
@@ -27,7 +28,8 @@ freelancer = Product(
     aplSalt="9bc4e8ab7841d09e",
     productId=28,
     aplIncludeKeyConfig="280ee05dbd04371e",
-    productKey="m32kI0NyKGyx2bFM"
+    productKey="m32kI0NyKGyx2bFM",
+    status = 'PENDING'
 )
 
 sme = Product(
@@ -37,9 +39,9 @@ sme = Product(
     aplSalt="7915c5620b3fc87b",
     productId=47,
     aplIncludeKeyConfig="7a61e5c370996340",
-    productKey="Hn1Ow0w36qo7MjhW"
+    productKey="Hn1Ow0w36qo7MjhW",
+    status='PENDING'
 )
-
 
 company = Product(
     branch="company-test",
@@ -48,9 +50,9 @@ company = Product(
     aplSalt="065d04198a83297a",
     productId=15,
     aplIncludeKeyConfig="649ba008fe6093da",
-    productKey="ygoJNQgg03q7sTdG"
+    productKey="ygoJNQgg03q7sTdG",
+    status='PENDING'
 )
-
 
 startup = Product(
     branch="startup-test",
@@ -59,8 +61,26 @@ startup = Product(
     aplSalt="e7a3af2fc36bb880",
     productId=14,
     aplIncludeKeyConfig="ffec04f977c87bed",
-    productKey="JjXPKXA3RZbnwZjT"
+    productKey="JjXPKXA3RZbnwZjT",
+    status='PENDING'
 )
+
+
+def progress_status():
+    table = prettytable.PrettyTable(["Product Name", "Product Id", "Branch", "Agent limit", "APL_SALT",
+                                     "APL_INCLUDE_KEY_CONFIG", "PRODUCT_KEY", "status"])
+    table.add_row(get_row_by_product(enterprise))
+    table.add_row(get_row_by_product(freelancer))
+    table.add_row(get_row_by_product(company))
+    table.add_row(get_row_by_product(sme))
+    table.add_row(get_row_by_product(startup))
+
+    print(table)
+
+
+def get_row_by_product(product):
+    return [product.productName, product.productId, product.branch, product.agentLimit,
+            product.aplSalt, product.aplIncludeKeyConfig, product.productKey, product.status]
 
 
 def git(*args):
@@ -113,7 +133,7 @@ def update_file_replacements(product):
     find_and_replace("config/app.php", enterprise.productName, product.productName)
 
     # replacing in config/auth.php
-    find_and_replace("config/auth.php", "'agent_limit'=>"+str(enterprise.agentLimit),
+    find_and_replace("config/auth.php", "'agent_limit'=>" + str(enterprise.agentLimit),
                      "'agent_limit'=>" + str(product.agentLimit))
 
     # replacing in config/self-update.php
@@ -216,12 +236,14 @@ def startup_update():
     publish_release_branch(startup.branch)
 
 
-enterprise_update()
+# enterprise_update()
+#
+# freelancer_update()
+#
+# company_update()
+#
+# sme_update()
+#
+# startup_update()
 
-freelancer_update()
-
-company_update()
-
-sme_update()
-
-startup_update()
+progress_status()

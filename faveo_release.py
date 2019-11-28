@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import subprocess
-import sys
 from collections import namedtuple
 import prettytable
+import optparse
 
 Product = namedtuple("Product", "branch agentLimit productName aplSalt productId aplIncludeKeyConfig productKey status")
 
@@ -290,6 +290,16 @@ def startup_update():
     # update remote branch with changes
     publish_release_branch(startup.branch)
 
+
+def set_faveo_base_path():
+    global faveo_base_path
+    parser = optparse.OptionParser()
+    parser.add_option("-p", "--path", dest="path", help="Path to faveo installation directory", default=faveo_base_path)
+    options = parser.parse_args()[0]
+    faveo_base_path = options.path
+
+
+set_faveo_base_path()
 
 progress_status()
 

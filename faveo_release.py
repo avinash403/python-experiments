@@ -76,7 +76,9 @@ def progress_status():
     table.add_row(get_row_by_product(sme))
     table.add_row(get_row_by_product(startup))
 
+    print("\n")
     print(table)
+    print("\n")
 
 
 def get_row_by_product(product):
@@ -103,8 +105,9 @@ def find_and_replace(file_path, needle, replacement):
     :param replacement:
     :return:
     """
-    file_absolute_path = faveo_base_path + file_path
+    print("[+] Replacing " + needle + " with "+replacement+" in "+file_path)
 
+    file_absolute_path = faveo_base_path + file_path
     # Read in the file
     with open(file_absolute_path, 'r') as file:
         file_data = file.read()
@@ -115,6 +118,8 @@ def find_and_replace(file_path, needle, replacement):
     # Write the file out again
     with open(file_absolute_path, 'w') as file:
         file.write(file_data)
+
+    print("[+] Replaced " + needle + " with "+replacement+" in "+file_path+" successfully")
 
 
 def remove_plugins():
@@ -154,24 +159,62 @@ def update_file_replacements(product):
 
 
 def sync_branch_with_development(branch):
+
+    print("[+] checking out to development")
+
     checkout_to_development()
+
+    print("[+] checked out to development")
+
+    print("[+] pushing development code to "+branch)
+
     git("push", "origin", "development:" + branch, "-f")
+
+    print("[+] "+branch+" updated successfully")
+
     git("fetch")
+
+    print("[+] checking out to "+branch)
+
     git("checkout", branch, "-f")
+
+    print("[+] checked out to "+branch)
+
     git("reset", "--hard", "origin/" + branch)
 
 
 def publish_release_branch(branch):
+
+    print("[+] Committing all changes")
+
     git("add", ".")
 
     git("commit", "-m", "product configuration updated", "-n")
 
+    print("[+] Committed all changes")
+
+    print("[+] Pushing to "+branch)
+
     git("push", "origin", branch)
+
+    print("[+] "+branch+" updated successfully")
 
 
 def enterprise_update():
+
+    print("--------------------------------------Updating Enterprise-----------------------------------------")
+
+    print("[+] checking out to development")
+
     checkout_to_development()
+
+    print("[+] checked out to development")
+
+    print("[+] pushing development code to "+enterprise.branch)
+
     git("push", "origin", "development:" + enterprise.branch, "-f")
+
+    print("[+] "+enterprise.branch+" updated successfully")
 
 
 def freelancer_update():
@@ -179,14 +222,20 @@ def freelancer_update():
     Updates freelancer branch with required release code
     :return:
     """
+    print("\n\n--------------------------------------Updating Freelancer-----------------------------------------")
+
     # syncing product branch with development
     sync_branch_with_development(freelancer.branch)
 
     # make required file changes
     update_file_replacements(freelancer)
 
+    print("[+] deleting plugins")
+
     # Delete all plugins
     remove_plugins()
+
+    print("[+] Plugins deleted successfully")
 
     # update remote branch with changes
     publish_release_branch(freelancer.branch)
@@ -197,6 +246,8 @@ def company_update():
     Updates company branch with required release code
     :return:
     """
+    print("\n\n--------------------------------------Updating Company-----------------------------------------")
+
     # syncing product branch with development
     sync_branch_with_development(company.branch)
 
@@ -212,6 +263,7 @@ def sme_update():
     Updates SME branch with required release code
     :return:
     """
+    print("\n\n--------------------------------------Updating SME-----------------------------------------")
     # syncing product branch with development
     sync_branch_with_development(sme.branch)
 
@@ -227,6 +279,8 @@ def startup_update():
     Updates startup branch with required release code
     :return:
     """
+    print("\n\n--------------------------------------Updating Startup-----------------------------------------")
+
     # syncing product branch with development
     sync_branch_with_development(startup.branch)
 
@@ -236,26 +290,37 @@ def startup_update():
     # update remote branch with changes
     publish_release_branch(startup.branch)
 
-enterprise_update()
-    #
-    # freelancer_update()
-    #
-    # company_update()
-    #
-    # sme_update()
-    #
-    # startup_update()
-
-
-def progress_bar(value, endvalue, bar_length=20):
-    percent = float(value) / endvalue
-    arrow = '-' * int(round(percent * bar_length) - 1) + '>'
-    spaces = ' ' * (bar_length - len(arrow))
-
-    sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
-    sys.stdout.flush()
-
 
 progress_status()
 
-progress_bar(10, 100)
+enterprise_update()
+
+enterprise = enterprise._replace(status="COMPLETED")
+
+freelancer_update()
+
+freelancer = freelancer._replace(status="COMPLETED")
+
+company_update()
+
+company = company._replace(status="COMPLETED")
+
+sme_update()
+
+sme = sme._replace(status="COMPLETED")
+
+startup_update()
+
+startup = startup._replace(status="COMPLETED")
+
+progress_status()
+
+# def progress_bar(value, endvalue, bar_length=20):
+#     percent = float(value) / endvalue
+#     arrow = '-' * int(round(percent * bar_length) - 1) + '>'
+#     spaces = ' ' * (bar_length - len(arrow))
+#
+#     sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
+#     sys.stdout.flush()
+#
+# progress_bar(10, 100)

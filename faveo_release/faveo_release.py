@@ -4,10 +4,13 @@ import subprocess
 from collections import namedtuple
 import prettytable
 import optparse
+from git import Git
 
 Product = namedtuple("Product", "branch agentLimit productName aplSalt productId aplIncludeKeyConfig productKey status")
 
 faveo_base_path = "/var/www/html/faveo-helpdesk-advance/"
+
+git_obj = Git(faveo_base_path)
 
 # enterprise configurations
 enterprise = Product(
@@ -86,17 +89,6 @@ def get_row_by_product(product):
             product.aplSalt, product.aplIncludeKeyConfig, product.productKey, product.status]
 
 
-def git(*args):
-    """
-    Performs git operations based on the params passed
-    :param args:
-    :return:
-    """
-    default_params = ["git", "-C", faveo_base_path]
-    all_params = default_params + list(args)
-    subprocess.call(all_params, stdout=open('./faveo_release.log', 'a'), stderr=open('./faveo_release.log', 'a'))
-
-
 def find_and_replace(file_path, needle, replacement):
     """
     Finds and replaces text in file in base path of faveo directory
@@ -105,7 +97,7 @@ def find_and_replace(file_path, needle, replacement):
     :param replacement:
     :return:
     """
-    print("[+] Replacing " + needle + " with "+replacement+" in "+file_path)
+    print("[+] Replacing " + needle + " with " + replacement + " in " + file_path)
 
     file_absolute_path = faveo_base_path + file_path
     # Read in the file
@@ -119,7 +111,7 @@ def find_and_replace(file_path, needle, replacement):
     with open(file_absolute_path, 'w') as file:
         file.write(file_data)
 
-    print("[+] Replaced " + needle + " with "+replacement+" in "+file_path+" successfully")
+    print("[+] Replaced " + needle + " with " + replacement + " in " + file_path + " successfully")
 
 
 def remove_plugins():
@@ -127,11 +119,11 @@ def remove_plugins():
 
 
 def checkout_to_development():
-    git("stash")
-    git("clean", "-fd")
-    git("checkout", "development", "-f")
-    git("fetch")
-    git("reset", "--hard", "origin/development")
+    git_obj.execute("stash")
+    git_obj.execute("clean", "-fd")
+    git_obj.execute("checkout", "development", "-f")
+    git_obj.execute("fetch")
+    git_obj.execute("reset", "--hard", "origin/development")
 
 
 def update_file_replacements(product):
@@ -159,49 +151,46 @@ def update_file_replacements(product):
 
 
 def sync_branch_with_development(branch):
-
     print("[+] checking out to development")
 
-    checkout_to_development()
+    git_obj.checkout('development')
 
     print("[+] checked out to development")
 
-    print("[+] pushing development code to "+branch)
+    print("[+] pushing development code to " + branch)
 
-    git("push", "origin", "development:" + branch, "-f")
+    git_obj.execute("push", "origin", "development:" + branch, "-f")
 
-    print("[+] "+branch+" updated successfully")
+    print("[+] " + branch + " updated successfully")
 
-    git("fetch")
+    git_obj.execute("fetch")
 
-    print("[+] checking out to "+branch)
+    print("[+] checking out to " + branch)
 
-    git("checkout", branch, "-f")
+    git_obj.execute("checkout", branch, "-f")
 
-    print("[+] checked out to "+branch)
+    print("[+] checked out to " + branch)
 
-    git("reset", "--hard", "origin/" + branch)
+    git_obj.execute("reset", "--hard", "origin/" + branch)
 
 
 def publish_release_branch(branch):
-
     print("[+] Committing all changes")
 
-    git("add", ".")
+    git_obj.execute("add", ".")
 
-    git("commit", "-m", "product configuration updated", "-n")
+    git_obj.execute("commit", "-m", "product configuration updated", "-n")
 
     print("[+] Committed all changes")
 
-    print("[+] Pushing to "+branch)
+    print("[+] Pushing to " + branch)
 
-    git("push", "origin", branch)
+    git_obj.execute("push", "origin", branch)
 
-    print("[+] "+branch+" updated successfully")
+    print("[+] " + branch + " updated successfully")
 
 
 def enterprise_update():
-
     print("--------------------------------------Updating Enterprise-----------------------------------------")
 
     print("[+] checking out to development")
@@ -210,11 +199,11 @@ def enterprise_update():
 
     print("[+] checked out to development")
 
-    print("[+] pushing development code to "+enterprise.branch)
+    print("[+] pushing development code to " + enterprise.branch)
 
-    git("push", "origin", "development:" + enterprise.branch, "-f")
+    git_obj.execute("push", "origin", "development:" + enterprise.branch, "-f")
 
-    print("[+] "+enterprise.branch+" updated successfully")
+    print("[+] " + enterprise.branch + " updated successfully")
 
 
 def freelancer_update():
@@ -307,21 +296,21 @@ enterprise_update()
 
 enterprise = enterprise._replace(status="COMPLETED")
 
-freelancer_update()
-
-freelancer = freelancer._replace(status="COMPLETED")
-
-company_update()
-
-company = company._replace(status="COMPLETED")
-
-sme_update()
-
-sme = sme._replace(status="COMPLETED")
-
-startup_update()
-
-startup = startup._replace(status="COMPLETED")
+# freelancer_update()
+#
+# freelancer = freelancer._replace(status="COMPLETED")
+#
+# company_update()
+#
+# company = company._replace(status="COMPLETED")
+#
+# sme_update()
+#
+# sme = sme._replace(status="COMPLETED")
+#
+# startup_update()
+#
+# startup = startup._replace(status="COMPLETED")
 
 progress_status()
 

@@ -4,70 +4,32 @@ import subprocess
 from collections import namedtuple
 import prettytable
 import optparse
-from git import Git
+import git
+import dotini
 
-Product = namedtuple("Product", "branch agentLimit productName aplSalt productId aplIncludeKeyConfig productKey status")
+Product = namedtuple("Product", "branch agent_limit name apl_salt product_id apl_include_key_config product_key status")
 
-faveo_base_path = "/var/www/html/faveo-helpdesk-advance/"
+faveo_base_path = dotini.read('config/app.ini').fs.base_path
 
-git_obj = Git(faveo_base_path)
+git_obj = git.Git(faveo_base_path)
 
-# enterprise configurations
-enterprise = Product(
-    branch="master-test",
-    agentLimit=0,
-    productName="Enterprise",
-    aplSalt="b047c04cde662b7a",
-    productId=8,
-    aplIncludeKeyConfig="515548a88b8ab641",
-    productKey="N85CeR7zL1J9zW5n",
-    status='PENDING'
-)
 
-# freelancer configurations
-freelancer = Product(
-    branch="freelancer-test",
-    agentLimit=2,
-    productName="Freelancer",
-    aplSalt="9bc4e8ab7841d09e",
-    productId=28,
-    aplIncludeKeyConfig="280ee05dbd04371e",
-    productKey="m32kI0NyKGyx2bFM",
-    status='PENDING'
-)
+def get_config(product):
+    product_config = dotini.read('config/product.ini')
+    config = product_config[product]
+    config.status = 'PENDING'
+    return config
 
-sme = Product(
-    branch="SME-test",
-    agentLimit=10,
-    productName="SME",
-    aplSalt="7915c5620b3fc87b",
-    productId=47,
-    aplIncludeKeyConfig="7a61e5c370996340",
-    productKey="Hn1Ow0w36qo7MjhW",
-    status='PENDING'
-)
 
-company = Product(
-    branch="company-test",
-    agentLimit=0,
-    productName="Company",
-    aplSalt="065d04198a83297a",
-    productId=15,
-    aplIncludeKeyConfig="649ba008fe6093da",
-    productKey="ygoJNQgg03q7sTdG",
-    status='PENDING'
-)
+enterprise = get_config('enterprise')
 
-startup = Product(
-    branch="startup-test",
-    agentLimit=5,
-    productName="Startup",
-    aplSalt="e7a3af2fc36bb880",
-    productId=14,
-    aplIncludeKeyConfig="ffec04f977c87bed",
-    productKey="JjXPKXA3RZbnwZjT",
-    status='PENDING'
-)
+freelancer = get_config('freelancer')
+
+sme = get_config('sme')
+
+company = get_config('company')
+
+startup = get_config('startup')
 
 
 def progress_status():
@@ -85,8 +47,8 @@ def progress_status():
 
 
 def get_row_by_product(product):
-    return [product.productName, product.productId, product.branch, product.agentLimit,
-            product.aplSalt, product.aplIncludeKeyConfig, product.productKey, product.status]
+    return [product.name, product.product_id, product.release_branch, product.agent_limit,
+            product.apl_salt, product.apl_include_key_config, product.product_key, product.status]
 
 
 def find_and_replace(file_path, needle, replacement):
@@ -115,39 +77,35 @@ def find_and_replace(file_path, needle, replacement):
 
 
 def remove_plugins():
+    print("[+] deleting plugins")
+
     subprocess.call(["rm", "-r", faveo_base_path + "app/Plugins"])
 
-
-def checkout_to_development():
-    git_obj.execute("stash")
-    git_obj.execute("clean", "-fd")
-    git_obj.execute("checkout", "development", "-f")
-    git_obj.execute("fetch")
-    git_obj.execute("reset", "--hard", "origin/development")
+    print("[+] Plugins deleted successfully")
 
 
 def update_file_replacements(product):
     # replacing in config/app.php
-    find_and_replace("config/app.php", enterprise.productName, product.productName)
+    find_and_replace("config/app.php", enterprise.name, product.name)
 
     # replacing in config/auth.php
-    find_and_replace("config/auth.php", "'agent_limit'=>" + str(enterprise.agentLimit),
-                     "'agent_limit'=>" + str(product.agentLimit))
+    find_and_replace("config/auth.php", "'agent_limit'=>" + str(enterprise.agent_limit),
+                     "'agent_limit'=>" + str(product.agent_limit))
 
     # replacing in config/self-update.php
-    find_and_replace("config/self-update.php", enterprise.productName, product.productName)
+    find_and_replace("config/self-update.php", enterprise.name, product.name)
 
     # replacing in public/script/apl_core_configuration.php
-    find_and_replace("public/script/apl_core_configuration.php", enterprise.aplSalt, product.aplSalt)
-    find_and_replace("public/script/apl_core_configuration.php", '"APL_PRODUCT_ID", ' + str(enterprise.productId),
-                     '"APL_PRODUCT_ID", ' + str(product.productId))
-    find_and_replace("public/script/apl_core_configuration.php", enterprise.aplIncludeKeyConfig,
-                     product.aplIncludeKeyConfig)
+    find_and_replace("public/script/apl_core_configuration.php", enterprise.apl_salt, product.apl_salt)
+    find_and_replace("public/script/apl_core_configuration.php", '"APL_PRODUCT_ID", ' + str(enterprise.product_id),
+                     '"APL_PRODUCT_ID", ' + str(product.product_id))
+    find_and_replace("public/script/apl_core_configuration.php", enterprise.apl_include_key_config,
+                     product.apl_include_key_config)
 
     # replacing public/script/update_core_configuration.php
-    find_and_replace("public/script/update_core_configuration.php", '"AUS_PRODUCT_ID", ' + str(enterprise.productId),
-                     '"AUS_PRODUCT_ID", ' + str(product.productId))
-    find_and_replace("public/script/update_core_configuration.php", enterprise.productKey, product.productKey)
+    find_and_replace("public/script/update_core_configuration.php", '"AUS_PRODUCT_ID", ' + str(enterprise.product_id),
+                     '"AUS_PRODUCT_ID", ' + str(product.product_id))
+    find_and_replace("public/script/update_core_configuration.php", enterprise.product_key, product.product_key)
 
 
 def sync_branch_with_development(branch):
@@ -158,130 +116,42 @@ def sync_branch_with_development(branch):
     git_obj.checkout(branch)
 
 
-def enterprise_update():
-    print("--------------------------------------Updating Enterprise-----------------------------------------")
-
-    git_obj.checkout('development')
-
-    git_obj.sync_remote_branch_with_current_branch(enterprise.branch)
-
-    print("--------------------------------Updated Enterprise Successfully-----------------------------------\n\n")
-
-
-def freelancer_update():
+def release(product):
     """
     Updates freelancer branch with required release code
     :return:
     """
-    print("\n\n--------------------------------------Updating Freelancer-----------------------------------------")
+    print("\n--------------------------------------Releasing "+product.name+"-----------------------------------------")
 
     # syncing product branch with development
-    sync_branch_with_development(freelancer.branch)
+    sync_branch_with_development(product.release_branch)
 
     # make required file changes
-    update_file_replacements(freelancer)
+    if product.name != 'enterprise':
+        update_file_replacements(product)
 
-    print("[+] deleting plugins")
-
-    # Delete all plugins
-    remove_plugins()
-
-    print("[+] Plugins deleted successfully")
+    if product.has_plugins:
+        # Delete all plugins
+        remove_plugins()
 
     # update remote branch with changes
-    git_obj.commit_and_publish(freelancer.branch)
+    git_obj.commit_and_publish(product.release_branch)
 
+    product.status = 'COMPLETED'
 
-def company_update():
-    """
-    Updates company branch with required release code
-    :return:
-    """
-    print("\n\n--------------------------------------Updating Company-----------------------------------------")
+    print("\n--------------------------------Released "+product.name+" Successfully----------------------------------\n")
 
-    # syncing product branch with development
-    sync_branch_with_development(company.branch)
-
-    # make required file changes
-    update_file_replacements(company)
-
-    # update remote branch with changes
-    git_obj.commit_and_publish(company.branch)
-
-
-def sme_update():
-    """
-    Updates SME branch with required release code
-    :return:
-    """
-    print("\n\n--------------------------------------Updating SME-----------------------------------------")
-    # syncing product branch with development
-    sync_branch_with_development(sme.branch)
-
-    # make required file changes
-    update_file_replacements(sme)
-
-    # update remote branch with changes
-    git_obj.commit_and_publish(sme.branch)
-
-
-def startup_update():
-    """
-    Updates startup branch with required release code
-    :return:
-    """
-    print("\n\n--------------------------------------Updating Startup-----------------------------------------")
-
-    # syncing product branch with development
-    sync_branch_with_development(startup.branch)
-
-    # make required file changes
-    update_file_replacements(startup)
-
-    # update remote branch with changes
-    git_obj.commit_and_publish(startup.branch)
-
-
-def set_faveo_base_path():
-    global faveo_base_path
-    parser = optparse.OptionParser()
-    parser.add_option("-p", "--path", dest="path", help="Path to faveo installation directory", default=faveo_base_path)
-    options = parser.parse_args()[0]
-    faveo_base_path = options.path
-
-
-set_faveo_base_path()
 
 progress_status()
 
-# enterprise_update()
-#
-# enterprise = enterprise._replace(status="COMPLETED")
+release(enterprise)
 
-freelancer_update()
+release(company)
 
-freelancer = freelancer._replace(status="COMPLETED")
-#
-# company_update()
-#
-# company = company._replace(status="COMPLETED")
-#
-# sme_update()
-#
-# sme = sme._replace(status="COMPLETED")
-#
-# startup_update()
-#
-# startup = startup._replace(status="COMPLETED")
+release(sme)
+
+release(startup)
+
+release(freelancer)
 
 progress_status()
-
-# def progress_bar(value, endvalue, bar_length=20):
-#     percent = float(value) / endvalue
-#     arrow = '-' * int(round(percent * bar_length) - 1) + '>'
-#     spaces = ' ' * (bar_length - len(arrow))
-#
-#     sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
-#     sys.stdout.flush()
-#
-# progress_bar(10, 100)

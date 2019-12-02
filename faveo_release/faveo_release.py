@@ -151,59 +151,21 @@ def update_file_replacements(product):
 
 
 def sync_branch_with_development(branch):
-    print("[+] checking out to development")
-
     git_obj.checkout('development')
 
-    print("[+] checked out to development")
+    git_obj.sync_remote_branch_with_current_branch(branch)
 
-    print("[+] pushing development code to " + branch)
-
-    git_obj.execute("push", "origin", "development:" + branch, "-f")
-
-    print("[+] " + branch + " updated successfully")
-
-    git_obj.execute("fetch")
-
-    print("[+] checking out to " + branch)
-
-    git_obj.execute("checkout", branch, "-f")
-
-    print("[+] checked out to " + branch)
-
-    git_obj.execute("reset", "--hard", "origin/" + branch)
-
-
-def publish_release_branch(branch):
-    print("[+] Committing all changes")
-
-    git_obj.execute("add", ".")
-
-    git_obj.execute("commit", "-m", "product configuration updated", "-n")
-
-    print("[+] Committed all changes")
-
-    print("[+] Pushing to " + branch)
-
-    git_obj.execute("push", "origin", branch)
-
-    print("[+] " + branch + " updated successfully")
+    git_obj.checkout(branch)
 
 
 def enterprise_update():
     print("--------------------------------------Updating Enterprise-----------------------------------------")
 
-    print("[+] checking out to development")
+    git_obj.checkout('development')
 
-    checkout_to_development()
+    git_obj.sync_remote_branch_with_current_branch(enterprise.branch)
 
-    print("[+] checked out to development")
-
-    print("[+] pushing development code to " + enterprise.branch)
-
-    git_obj.execute("push", "origin", "development:" + enterprise.branch, "-f")
-
-    print("[+] " + enterprise.branch + " updated successfully")
+    print("--------------------------------Updated Enterprise Successfully-----------------------------------\n\n")
 
 
 def freelancer_update():
@@ -227,7 +189,7 @@ def freelancer_update():
     print("[+] Plugins deleted successfully")
 
     # update remote branch with changes
-    publish_release_branch(freelancer.branch)
+    git_obj.commit_and_publish(freelancer.branch)
 
 
 def company_update():
@@ -244,7 +206,7 @@ def company_update():
     update_file_replacements(company)
 
     # update remote branch with changes
-    publish_release_branch(company.branch)
+    git_obj.commit_and_publish(company.branch)
 
 
 def sme_update():
@@ -260,7 +222,7 @@ def sme_update():
     update_file_replacements(sme)
 
     # update remote branch with changes
-    publish_release_branch(sme.branch)
+    git_obj.commit_and_publish(sme.branch)
 
 
 def startup_update():
@@ -277,7 +239,7 @@ def startup_update():
     update_file_replacements(startup)
 
     # update remote branch with changes
-    publish_release_branch(startup.branch)
+    git_obj.commit_and_publish(startup.branch)
 
 
 def set_faveo_base_path():
@@ -292,13 +254,13 @@ set_faveo_base_path()
 
 progress_status()
 
-enterprise_update()
-
-enterprise = enterprise._replace(status="COMPLETED")
-
-# freelancer_update()
+# enterprise_update()
 #
-# freelancer = freelancer._replace(status="COMPLETED")
+# enterprise = enterprise._replace(status="COMPLETED")
+
+freelancer_update()
+
+freelancer = freelancer._replace(status="COMPLETED")
 #
 # company_update()
 #

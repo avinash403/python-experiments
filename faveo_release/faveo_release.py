@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 
 import subprocess
-from collections import namedtuple
 import prettytable
-import optparse
 import git
 import dotini
-
-Product = namedtuple("Product", "branch agent_limit name apl_salt product_id apl_include_key_config product_key status")
 
 faveo_base_path = dotini.read('config/app.ini').fs.base_path
 
 git_obj = git.Git(faveo_base_path)
+
+export_path = dotini.read('config/app.ini').fs.export_path
 
 
 def get_config(product):
@@ -127,7 +125,7 @@ def release(product):
     sync_branch_with_development(product.release_branch)
 
     # make required file changes
-    if product.name != 'enterprise':
+    if product.name != 'Enterprise':
         update_file_replacements(product)
 
     if product.has_plugins:
@@ -138,6 +136,8 @@ def release(product):
     git_obj.commit_and_publish(product.release_branch)
 
     product.status = 'COMPLETED'
+
+    git_obj.export(product.release_branch, export_path)
 
     print("\n--------------------------------Released "+product.name+" Successfully----------------------------------\n")
 

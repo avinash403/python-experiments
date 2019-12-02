@@ -42,3 +42,10 @@ class Git:
         self.execute("commit", "-m", "product configuration updated", "-n")
         log("committed all changes")
         self.sync_remote_branch_with_current_branch(branch)
+
+    def export(self, branch, path):
+        absolute_path = path+'/'+branch+".zip"
+        log('exporting source code to '+absolute_path)
+        subprocess.call(['mkdir', '-p',  path])
+        self.execute('archive', '--format', 'zip', '--output', absolute_path, branch)
+        log('exported successfully')

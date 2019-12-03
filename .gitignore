@@ -1,3 +1,7 @@
 venv
 .idea
 faveo_release.log
+*.pyc
+*build
+*dist
+*.spec
